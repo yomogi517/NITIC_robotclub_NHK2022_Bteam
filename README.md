@@ -1,1 +1,1 @@
-# NITIC-robot-club-2022-B-team
+# NITIC_robotclub_NHK2022_Bteam
