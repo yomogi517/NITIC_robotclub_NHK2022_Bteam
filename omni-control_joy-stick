@@ -1,15 +1,22 @@
 #include "mbed.h"
 #include "PS3.h"
-DigitalIn button(USER_BUTTON);
-I2C i2c(D14,D15);
-Serial pc(USBTX,USBRX);
-PS3 ps3 (D8,D2);
+#include "mbed_wait_api.h"
 
+#define ADDRESS_MIGI_UE 0x00
+#define ADDRESS_MIGI_SITA 0x00
+#define ADDRESS_HIDARI_UE 0x00
+#define ADDRESS_HIDARI_SITA 0x00
+
+// DigitalIn button(USER_BUTTON);
+// Serial pc(USBTX,USBRX);
+I2C i2c(D14,D15);
+PS3 ps3 (A0,A1);
+DigitalOut sig(D13);
 
 //プロトタイプ宣言
 void get_data(void);
 void send(char add,char data);
-char move_value(int value);
+char move_value(double value);
 
 //変数の初期化
 int Ry;            //ジョイコン　右　y軸
@@ -28,22 +35,13 @@ int button_sankaku; // △
 int button_sikaku;  // ☐
 int button_batu;    // ✕
 
-char address_migi_ue;     //右上
-char address_hidari_ue;   //左上
-char address_migi_sita;   //右下
-char address_hidari_sita; //左下
-
 char data;
 
 //main関数
 int main(void){
-    address_migi_ue=0x14;
-    address_migi_sita = 0x16;
-    address_hidari_ue=0x60;
-    address_hidari_sita =0x40;
     while(true){
         get_data();
-        pc.printf("m:%d L:%d R:%d Lx%d Ly%d\n",button_maru,L,R,Lx,Ly);
+        printf("m:%d L:%d R:%d Lx%d Ly%d\n",button_maru,L,R,Lx,Ly);
 
         //ジョイコン処理
         if(!Lx || !Ly){
@@ -64,63 +62,63 @@ int main(void){
             data_lu = move_value(value_lu);
             data_ls = move_value(value_ls);
 
-            send(address_migi_ue,data_ru);
-            send(address_migi_sita,data_rs);
-            send(address_hidari_sita,data_ls);
-            send(address_hidari_ue,data_lu);
+            send(ADDRESS_MIGI_UE,data_ru);
+            send(ADDRESS_MIGI_SITA,data_rs);
+            send(ADDRESS_HIDARI_SITA,data_ls);
+            send(ADDRESS_HIDARI_UE,data_lu);
 
-            wait(0.05);
+            wait_us(50000);
 
             data = 0x80;
-            send(address_migi_ue,data);
-            send(address_migi_sita,data);
-            send(address_hidari_sita,data);
-            send(address_hidari_ue,data);
+            send(ADDRESS_MIGI_UE,data);
+            send(ADDRESS_MIGI_SITA,data);
+            send(ADDRESS_HIDARI_SITA,data);
+            send(ADDRESS_HIDARI_UE,data);
 
         }
 
         //●ボタン
         if(button_maru ==1){
             data = 0xff;
-            send(address_migi_sita,data);
-            wait(0.05);
+            send(ADDRESS_MIGI_SITA,data);
+            wait_us(50000);
             data = 0x80;
-            send(address_migi_sita,data);
+            send(ADDRESS_MIGI_SITA,data);
         }
 
         //左に旋回
         if(L==1){
             data = 0x01;
-            send(address_migi_ue,data);
-            send(address_migi_sita,data);
-            //send(address_hidari_ue);
-            //send(address_hidari_sita);
+            send(ADDRESS_MIGI_UE,data);
+            send(ADDRESS_MIGI_SITA,data);
+            //send(ADDRESS_HIDARI_UE);
+            //send(ADDRESS_HIDARI_SITA);
 
-            wait(0.05);
+            wait_us(50000);
 
             data = 0x80;
-            send(address_migi_ue,data);
-            send(address_migi_sita,data);
-            //send(address_hidari_ue);
-            //send(address_hidari_sita);
+            send(ADDRESS_MIGI_UE,data);
+            send(ADDRESS_MIGI_SITA,data);
+            //send(ADDRESS_HIDARI_UE);
+            //send(ADDRESS_HIDARI_SITA);
 
         }
 
         //右に旋回
         if(R==1){
             data = 0xff;
-            send(address_migi_ue,data);
-            send(address_migi_sita,data);
-            //send(address_hidari_ue);
-            //send(address_hidari_sita);
+            send(ADDRESS_MIGI_UE,data);
+            send(ADDRESS_MIGI_SITA,data);
+            //send(ADDRESS_HIDARI_UE);
+            //send(ADDRESS_HIDARI_SITA);
 
-            wait(0.05);
+            wait_us(50000);
 
             data = 0x80;
-            send(address_migi_ue,data);
-            send(address_migi_sita,data);
-            //send(address_hidari_ue);
-            //send(address_hidari_sita);
+            send(ADDRESS_MIGI_UE,data);
+            send(ADDRESS_MIGI_SITA,data);
+            //send(ADDRESS_HIDARI_UE);
+            //send(ADDRESS_HIDARI_SITA);
         }
 
     }
@@ -129,15 +127,15 @@ int main(void){
 //データ取得のための関数
 void get_data(void){
     //ボタン取得
-    button_ue = ps3.getButtonState(ue);
-    button_sita= ps3.getButtonState(sita);
-    button_migi = ps3.getButtonState(migi);
-    button_hidari = ps3.getButtonState(hidari);
+    button_ue = ps3.getButtonState(PS3::ue);
+    button_sita= ps3.getButtonState(PS3::sita);
+    button_migi = ps3.getButtonState(PS3::migi);
+    button_hidari = ps3.getButtonState(PS3::hidari);
 
-    L = ps3.getButtonState(L1);
-    R = ps3.getButtonState(R1);
+    L = ps3.getButtonState(PS3::L1);
+    R = ps3.getButtonState(PS3::R1);
 
-    button_maru = ps3.getButtonState(maru);
+    button_maru = ps3.getButtonState(PS3::maru);
 
     //スティックの座標取得
     Ry = ps3.getRightJoystickYaxis();
@@ -148,7 +146,7 @@ void get_data(void){
 
 //I2C送信用関数
 void send(char address, char data){
-    wait(0.015);
+    wait_us(15000);
     i2c.start();
     i2c.write(address);
     i2c.write(data);
@@ -177,7 +175,7 @@ char  move_value(double value){
     //正転と逆転の処理
     //引数がマイナスの時は逆転、プラスの時は正転、0の時には静止
     if(!value) move = 128;
-    else if(x<0) move = 124-rate;
+    else if(value<0) move = 124-rate;
     else move = rate+ 132;
 
     //型変更
