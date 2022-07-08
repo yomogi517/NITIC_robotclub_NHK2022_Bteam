@@ -16,6 +16,7 @@ DigitalOut sig(D13);
 //プロトタイプ宣言
 void get_data(void);
 void send(char add,char data);
+void send_all(char data);
 char move_value(double value);
 
 //変数の初期化
@@ -39,10 +40,17 @@ char data;
 
 //main関数
 int main(void){
+    int moved;
+    
     while(true){
+        moved = 0;
+        
         get_data();
         printf("m:%d L:%d R:%d Lx%d Ly%d\n",button_maru,L,R,Lx,Ly);
 
+        /*↓なんかこの辺整理できそうな気がしなくもない（配列とかで）
+          ここからコードが増えるならまとめたほうがいいかも*/
+        
         //ジョイコン処理
         if(!Lx || !Ly){
             double value_ru,value_rs,value_lu,value_ls;   //右上,右下,左上,左下
@@ -66,22 +74,16 @@ int main(void){
             send(ADDRESS_MIGI_SITA,data_rs);
             send(ADDRESS_HIDARI_SITA,data_ls);
             send(ADDRESS_HIDARI_UE,data_lu);
-
-            wait_us(50000);
-
-            data = 0x80;
-            send(ADDRESS_MIGI_UE,data);
-            send(ADDRESS_MIGI_SITA,data);
-            send(ADDRESS_HIDARI_SITA,data);
-            send(ADDRESS_HIDARI_UE,data);
-
+            
+            moved = 1;
         }
 
         //●ボタン
-        if(button_maru ==1){
+        //よくわからん
+        if(button_maru){
             data = 0xff;
             send(ADDRESS_MIGI_SITA,data);
-            wait_us(50000);
+        }else{
             data = 0x80;
             send(ADDRESS_MIGI_SITA,data);
         }
@@ -94,14 +96,12 @@ int main(void){
             //send(ADDRESS_HIDARI_UE);
             //send(ADDRESS_HIDARI_SITA);
 
-            wait_us(50000);
-
+        }else{
             data = 0x80;
             send(ADDRESS_MIGI_UE,data);
             send(ADDRESS_MIGI_SITA,data);
             //send(ADDRESS_HIDARI_UE);
             //send(ADDRESS_HIDARI_SITA);
-
         }
 
         //右に旋回
@@ -151,6 +151,13 @@ void send(char address, char data){
     i2c.write(address);
     i2c.write(data);
     i2c.stop();
+}
+
+void send_all(char d_migiue, char d_migisita, char d_hidariue, char d_hidarisita){
+    send(ADDRESS_MIGI_UE,d_migiue);
+    send(ADDRESS_MIGI_SITA,d_migisita);
+    send(ADDRESS_HIDARI_UE,d_hidariue);
+    send(ADDRESS_HIDARI_SITA,d_hidarisita);
 }
 
 //取得座標から回転速度を求める関数
