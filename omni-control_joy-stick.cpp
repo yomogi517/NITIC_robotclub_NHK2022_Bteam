@@ -18,7 +18,7 @@ DigitalOut sig(D13);
 //プロトタイプ宣言
 void get_data(void);
 void send(char add,char data);
-void send_all(char data);
+void send_all(char d_mu, char d_ms, char d_hu, char d_hs)
 char move_value(double value);
 
 //変数の初期化
@@ -53,6 +53,8 @@ int main(void){
         /*↓なんかこの辺整理できそうな気がしなくもない（配列とかで）
           ここからコードが増えるならまとめたほうがいいかも*/
         
+        //else if じゃ駄目なのかね？
+        
         //ジョイコン処理
         if(!Lx || !Ly){
             double value_ru,value_rs,value_lu,value_ls;   //右上,右下,左上,左下
@@ -71,56 +73,37 @@ int main(void){
             data_rs = move_value(value_rs);
             data_lu = move_value(value_lu);
             data_ls = move_value(value_ls);
-
-            send(ADDRESS_MIGI_UE,data_ru);
-            send(ADDRESS_MIGI_SITA,data_rs);
-            send(ADDRESS_HIDARI_SITA,data_ls);
-            send(ADDRESS_HIDARI_UE,data_lu);
             
+            moved = 2;
+        }
+        
+        //左に旋回
+        if(L==1 && !moved){
+            data = 0x01;            
             moved = 1;
         }
 
-        //●ボタン
-        //よくわからん
-        if(button_maru){
-            data = 0xff;
-            send(ADDRESS_MIGI_SITA,data);
-        }else{
-            data = 0x80;
-            send(ADDRESS_MIGI_SITA,data);
-        }
-
-        //左に旋回
-        if(L==1){
-            data = 0x01;
-            send(ADDRESS_MIGI_UE,data);
-            send(ADDRESS_MIGI_SITA,data);
-            //send(ADDRESS_HIDARI_UE);
-            //send(ADDRESS_HIDARI_SITA);
-
-        }else{
-            data = 0x80;
-            send(ADDRESS_MIGI_UE,data);
-            send(ADDRESS_MIGI_SITA,data);
-            //send(ADDRESS_HIDARI_UE);
-            //send(ADDRESS_HIDARI_SITA);
-        }
-
         //右に旋回
-        if(R==1){
+        if(R==1 && !moved){
             data = 0xff;
-            send(ADDRESS_MIGI_UE,data);
+            moved = 1;
+        }
+        
+        if(!moved){
+            data = 0x80;            
+        }
+        
+        if(moved == 1){
+            send(data,data,data,data);
+        }else if(moved == ){
+            send_all(data_ru, data_rs, data_lu, data_ls);
+        }
+            
+        //●ボタン
+        //NAGAIMO:よくわからん
+        if(button_maru && !moved){
+            data = 0xff;
             send(ADDRESS_MIGI_SITA,data);
-            //send(ADDRESS_HIDARI_UE);
-            //send(ADDRESS_HIDARI_SITA);
-
-            wait_us(50000);
-
-            data = 0x80;
-            send(ADDRESS_MIGI_UE,data);
-            send(ADDRESS_MIGI_SITA,data);
-            //send(ADDRESS_HIDARI_UE);
-            //send(ADDRESS_HIDARI_SITA);
         }
 
     }
@@ -155,11 +138,11 @@ void send(char address, char data){
     i2c.stop();
 }
 
-void send_all(char d_migiue, char d_migisita, char d_hidariue, char d_hidarisita){
-    send(ADDRESS_MIGI_UE,d_migiue);
-    send(ADDRESS_MIGI_SITA,d_migisita);
-    send(ADDRESS_HIDARI_UE,d_hidariue);
-    send(ADDRESS_HIDARI_SITA,d_hidarisita);
+void send_all(char d_mu, char d_ms, char d_hu, char d_hs){
+    send(ADDRESS_MIGI_UE,d_mu);
+    send(ADDRESS_MIGI_SITA,d_ms);
+    send(ADDRESS_HIDARI_SITA,d_hs);
+    send(ADDRESS_HIDARI_UE,d_hu);
 }
 
 //取得座標から回転速度を求める関数
