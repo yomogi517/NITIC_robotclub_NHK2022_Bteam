@@ -53,12 +53,12 @@ int main(void){
         }
 
         get_data();
-        printf("m:%d L:%d R:%d Lx%d Ly%d\n",button_maru,L,R,Lx,Ly);
+        printf("m:%d L:%d R:%d Lx%d Ly%d  ",button_maru,L,R,Lx,Ly);
         
         //ジョイコン処理
         moved = 0;
 
-        if(!Lx || !Ly){
+        if(Lx != 0 || Ly != 0){
             double value_ru,value_rs,value_lu,value_ls;   //右上,右下,左上,左下
             char data_ru,data_rs,data_lu,data_ls;
 
@@ -81,14 +81,14 @@ int main(void){
         }
         
         //左に旋回
-        if(L==1 && !moved){
+        if(L && !moved){
             data = 0x01;
             send_all(data,data,data,data);
             moved = 1;
         }
 
         //右に旋回
-        if(R==1 && !moved){
+        if(R && !moved){
             data = 0xff;
             send_all(data,data,data,data);
             moved = 1;
@@ -145,13 +145,15 @@ void send_all(char d_mu, char d_ms, char d_hs, char d_hu){
     send(ADDRESS_MIGI_SITA,d_ms);
     send(ADDRESS_HIDARI_SITA,d_hs);
     send(ADDRESS_HIDARI_UE,d_hu);
+    
+    printf("%d,%d,%d,%d\n", d_mu, d_ms, d_hs, d_hu);
 }
 
 //取得座標から回転速度を求める関数
 char move_value(double value){
     double uv = value;
     int rate, move;
-    char resulte;
+    char result;
 
     //絶対値化
     if(value<0) uv = uv*-1;
@@ -170,9 +172,9 @@ char move_value(double value){
     //引数がマイナスの時は逆転、プラスの時は正転、0の時には静止
     if(!value) move = 128;
     else if(value<0) move = 124-rate;
-    else move = rate+ 132;
+    else move = rate + 132;
 
     //型変更
-    resulte = (char)move;
-    return resulte;
+    result = (char)move;
+    return result;
 }
