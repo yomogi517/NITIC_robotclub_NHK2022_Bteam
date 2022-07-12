@@ -53,7 +53,7 @@ int main(void){
         }
 
         get_data();
-        printf("m:%d L:%d R:%d Lx%d Ly%d  ",button_maru,L,R,Lx,Ly);
+        printf("m:%d L:%d R:%d Lx%d Ly%d\n",button_maru,L,R,Lx,Ly);
         
         //ジョイコン処理
         moved = 0;
@@ -94,19 +94,14 @@ int main(void){
             moved = 1;
         }
         
+        //静止
         if(!moved){
             data = 0x80;  
             send_all(data,data,data,data);
         }
 
         //●ボタン
-        //よくわからんからコメントアウトしておいた
-        /*
-        if(button_maru && !moved){
-            data = 0xff;
-            send(ADDRESS_MIGI_SITA,data);
-        }
-        */
+        //よくわからん、役割なし
         
     }
 }
@@ -145,8 +140,6 @@ void send_all(char d_mu, char d_ms, char d_hs, char d_hu){
     send(ADDRESS_MIGI_SITA,d_ms);
     send(ADDRESS_HIDARI_SITA,d_hs);
     send(ADDRESS_HIDARI_UE,d_hu);
-    
-    printf("%d,%d,%d,%d\n", d_mu, d_ms, d_hs, d_hu);
 }
 
 //取得座標から回転速度を求める関数
