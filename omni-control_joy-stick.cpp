@@ -2,10 +2,10 @@
 #include "PS3.h"
 #include "mbed_wait_api.h"
 
-#define ADDRESS_MIGI_UE 0x00
-#define ADDRESS_MIGI_SITA 0x00
-#define ADDRESS_HIDARI_UE 0x00
-#define ADDRESS_HIDARI_SITA 0x00
+#define ADDRESS_MIGI_UE 0x40
+#define ADDRESS_MIGI_SITA 0x50
+#define ADDRESS_HIDARI_UE 0x24
+#define ADDRESS_HIDARI_SITA 0x30
 
 // DigitalIn button(USER_BUTTON);
 // Serial pc(USBTX,USBRX);
@@ -16,6 +16,7 @@ DigitalOut sig(D13);
 //プロトタイプ宣言
 void get_data(void);
 void send(char add,char data);
+void send_all(char d_mu, char d_ms, char d_hu, char d_hs);
 char move_value(double value);
 
 //変数の初期化
@@ -38,13 +39,26 @@ int button_batu;    // ✕
 char data;
 
 //main関数
-int main(void){
-    while(true){
+int main(void){    
+    int moved;
+
+    while(true){  
+        //緊急停止
+        if(ps3.getSELECTState()){
+            sig = 1;
+        }
+
+        if(ps3.getSTARTState()){
+            sig = 0;
+        }
+
         get_data();
         printf("m:%d L:%d R:%d Lx%d Ly%d\n",button_maru,L,R,Lx,Ly);
-
+        
         //ジョイコン処理
-        if(!Lx || !Ly){
+        moved = 0;
+
+        if(Lx != 0 || Ly != 0){
             double value_ru,value_rs,value_lu,value_ls;   //右上,右下,左上,左下
             char data_ru,data_rs,data_lu,data_ls;
 
@@ -61,66 +75,34 @@ int main(void){
             data_rs = move_value(value_rs);
             data_lu = move_value(value_lu);
             data_ls = move_value(value_ls);
-
-            send(ADDRESS_MIGI_UE,data_ru);
-            send(ADDRESS_MIGI_SITA,data_rs);
-            send(ADDRESS_HIDARI_SITA,data_ls);
-            send(ADDRESS_HIDARI_UE,data_lu);
-
-            wait_us(50000);
-
-            data = 0x80;
-            send(ADDRESS_MIGI_UE,data);
-            send(ADDRESS_MIGI_SITA,data);
-            send(ADDRESS_HIDARI_SITA,data);
-            send(ADDRESS_HIDARI_UE,data);
-
+            
+            send_all(data_ru, data_rs, data_lu, data_ls);
+            moved = 1;
         }
-
-        //●ボタン
-        if(button_maru ==1){
-            data = 0xff;
-            send(ADDRESS_MIGI_SITA,data);
-            wait_us(50000);
-            data = 0x80;
-            send(ADDRESS_MIGI_SITA,data);
-        }
-
+        
         //左に旋回
-        if(L==1){
+        if(L && !moved){
             data = 0x01;
-            send(ADDRESS_MIGI_UE,data);
-            send(ADDRESS_MIGI_SITA,data);
-            //send(ADDRESS_HIDARI_UE);
-            //send(ADDRESS_HIDARI_SITA);
-
-            wait_us(50000);
-
-            data = 0x80;
-            send(ADDRESS_MIGI_UE,data);
-            send(ADDRESS_MIGI_SITA,data);
-            //send(ADDRESS_HIDARI_UE);
-            //send(ADDRESS_HIDARI_SITA);
-
+            send_all(data,data,data,data);
+            moved = 1;
         }
 
         //右に旋回
-        if(R==1){
+        if(R && !moved){
             data = 0xff;
-            send(ADDRESS_MIGI_UE,data);
-            send(ADDRESS_MIGI_SITA,data);
-            //send(ADDRESS_HIDARI_UE);
-            //send(ADDRESS_HIDARI_SITA);
-
-            wait_us(50000);
-
-            data = 0x80;
-            send(ADDRESS_MIGI_UE,data);
-            send(ADDRESS_MIGI_SITA,data);
-            //send(ADDRESS_HIDARI_UE);
-            //send(ADDRESS_HIDARI_SITA);
+            send_all(data,data,data,data);
+            moved = 1;
+        }
+        
+        //静止
+        if(!moved){
+            data = 0x80;  
+            send_all(data,data,data,data);
         }
 
+        //●ボタン
+        //よくわからん、役割なし
+        
     }
 }
 
@@ -153,11 +135,18 @@ void send(char address, char data){
     i2c.stop();
 }
 
+void send_all(char d_mu, char d_ms, char d_hs, char d_hu){
+    send(ADDRESS_MIGI_UE,d_mu);
+    send(ADDRESS_MIGI_SITA,d_ms);
+    send(ADDRESS_HIDARI_SITA,d_hs);
+    send(ADDRESS_HIDARI_UE,d_hu);
+}
+
 //取得座標から回転速度を求める関数
-char  move_value(double value){
-    double uv=value;
-    int rate,move;
-    char resulte;
+char move_value(double value){
+    double uv = value;
+    int rate, move;
+    char result;
 
     //絶対値化
     if(value<0) uv = uv*-1;
@@ -167,7 +156,7 @@ char  move_value(double value){
     rate = (double)uv/89.0954*100+0.5;
     
     //64だと100%を超えるのでその調整
-    //if(rate>100) rate = 100;
+    if(rate>100) rate = 100;
 
     //割合をもとに出力するパワーを計算(整数)
     rate = (double)rate/100.0*123.0;
@@ -176,10 +165,9 @@ char  move_value(double value){
     //引数がマイナスの時は逆転、プラスの時は正転、0の時には静止
     if(!value) move = 128;
     else if(value<0) move = 124-rate;
-    else move = rate+ 132;
+    else move = rate + 132;
 
     //型変更
-    resulte = (char)move;
-
-    return resulte;
+    result = (char)move;
+    return result;
 }
