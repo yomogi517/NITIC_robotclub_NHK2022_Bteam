@@ -1,4 +1,4 @@
-//WIP
+//動作未確認、エラーすらチェックしてないよ♡
 
 #include "mbed.h"
 #include "PS3.h"
@@ -41,12 +41,8 @@ int button_batu;    // ✕
 char data;
 
 //main関数
-int main(void){
-    int moved;
-    
-    while(true){
-        moved = 0;
-        
+int main(void){    
+    while(true){        
         get_data();
         printf("m:%d L:%d R:%d Lx%d Ly%d\n",button_maru,L,R,Lx,Ly);
 
@@ -74,38 +70,35 @@ int main(void){
             data_lu = move_value(value_lu);
             data_ls = move_value(value_ls);
             
-            moved = 2;
+            send_all(data_ru, data_rs, data_lu, data_ls);
         }
         
         //左に旋回
         if(L==1 && !moved){
-            data = 0x01;            
-            moved = 1;
+            data = 0x01;
+            send_all(data,data,data,data);
         }
 
         //右に旋回
         if(R==1 && !moved){
             data = 0xff;
-            moved = 1;
+            send_all(data,data,data,data);
         }
         
         if(!moved){
-            data = 0x80;            
+            data = 0x80;  
+            send_all(data,data,data,data);
         }
-        
-        if(moved == 1){
-            send(data,data,data,data);
-        }else if(moved == ){
-            send_all(data_ru, data_rs, data_lu, data_ls);
-        }
-            
+                    
         //●ボタン
-        //NAGAIMO:よくわからん
+        //よくわからんからコメントアウトしておいた
+        /*
         if(button_maru && !moved){
             data = 0xff;
             send(ADDRESS_MIGI_SITA,data);
         }
-
+        */
+        
     }
 }
 
@@ -146,7 +139,7 @@ void send_all(char d_mu, char d_ms, char d_hu, char d_hs){
 }
 
 //取得座標から回転速度を求める関数
-char  move_value(double value){
+char move_value(double value){
     double uv=value;
     int rate,move;
     char resulte;
@@ -159,7 +152,7 @@ char  move_value(double value){
     rate = (double)uv/89.0954*100+0.5;
     
     //64だと100%を超えるのでその調整
-    //if(rate>100) rate = 100;
+    if(rate>100) rate = 100;
 
     //割合をもとに出力するパワーを計算(整数)
     rate = (double)rate/100.0*123.0;
