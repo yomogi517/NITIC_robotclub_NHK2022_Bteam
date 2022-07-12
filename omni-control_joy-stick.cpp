@@ -1,5 +1,3 @@
-//動作未確認、エラーすらチェックしてないよ♡
-
 #include "mbed.h"
 #include "PS3.h"
 #include "mbed_wait_api.h"
@@ -18,7 +16,7 @@ DigitalOut sig(D13);
 //プロトタイプ宣言
 void get_data(void);
 void send(char add,char data);
-void send_all(char d_mu, char d_ms, char d_hu, char d_hs)
+void send_all(char d_mu, char d_ms, char d_hu, char d_hs);
 char move_value(double value);
 
 //変数の初期化
@@ -42,6 +40,8 @@ char data;
 
 //main関数
 int main(void){    
+    int moved;
+
     while(true){        
         get_data();
         printf("m:%d L:%d R:%d Lx%d Ly%d\n",button_maru,L,R,Lx,Ly);
@@ -52,6 +52,8 @@ int main(void){
         //else if じゃ駄目なのかね？
         
         //ジョイコン処理
+        moved = 1;
+
         if(!Lx || !Ly){
             double value_ru,value_rs,value_lu,value_ls;   //右上,右下,左上,左下
             char data_ru,data_rs,data_lu,data_ls;
@@ -71,18 +73,21 @@ int main(void){
             data_ls = move_value(value_ls);
             
             send_all(data_ru, data_rs, data_lu, data_ls);
+            moved = 1;
         }
         
         //左に旋回
         if(L==1 && !moved){
             data = 0x01;
             send_all(data,data,data,data);
+            moved = 1;
         }
 
         //右に旋回
         if(R==1 && !moved){
             data = 0xff;
             send_all(data,data,data,data);
+            moved = 1;
         }
         
         if(!moved){
