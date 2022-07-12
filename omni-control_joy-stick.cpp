@@ -2,10 +2,10 @@
 #include "PS3.h"
 #include "mbed_wait_api.h"
 
-#define ADDRESS_MIGI_UE 0x00
-#define ADDRESS_MIGI_SITA 0x00
-#define ADDRESS_HIDARI_UE 0x00
-#define ADDRESS_HIDARI_SITA 0x00
+#define ADDRESS_MIGI_UE 0x40
+#define ADDRESS_MIGI_SITA 0x50
+#define ADDRESS_HIDARI_UE 0x24
+#define ADDRESS_HIDARI_SITA 0x30
 
 // DigitalIn button(USER_BUTTON);
 // Serial pc(USBTX,USBRX);
@@ -42,17 +42,21 @@ char data;
 int main(void){    
     int moved;
 
-    while(true){        
+    while(true){  
+        //緊急停止
+        if(ps3.getSELECTState()){
+            sig = 1;
+        }
+
+        if(ps3.getSTARTState()){
+            sig = 0;
+        }
+
         get_data();
         printf("m:%d L:%d R:%d Lx%d Ly%d\n",button_maru,L,R,Lx,Ly);
-
-        /*↓なんかこの辺整理できそうな気がしなくもない（配列とかで）
-          ここからコードが増えるならまとめたほうがいいかも*/
-        
-        //else if じゃ駄目なのかね？
         
         //ジョイコン処理
-        moved = 1;
+        moved = 0;
 
         if(!Lx || !Ly){
             double value_ru,value_rs,value_lu,value_ls;   //右上,右下,左上,左下
@@ -94,7 +98,7 @@ int main(void){
             data = 0x80;  
             send_all(data,data,data,data);
         }
-                    
+
         //●ボタン
         //よくわからんからコメントアウトしておいた
         /*
@@ -136,7 +140,7 @@ void send(char address, char data){
     i2c.stop();
 }
 
-void send_all(char d_mu, char d_ms, char d_hu, char d_hs){
+void send_all(char d_mu, char d_ms, char d_hs, char d_hu){
     send(ADDRESS_MIGI_UE,d_mu);
     send(ADDRESS_MIGI_SITA,d_ms);
     send(ADDRESS_HIDARI_SITA,d_hs);
@@ -145,8 +149,8 @@ void send_all(char d_mu, char d_ms, char d_hu, char d_hs){
 
 //取得座標から回転速度を求める関数
 char move_value(double value){
-    double uv=value;
-    int rate,move;
+    double uv = value;
+    int rate, move;
     char resulte;
 
     //絶対値化
@@ -170,6 +174,5 @@ char move_value(double value){
 
     //型変更
     resulte = (char)move;
-
     return resulte;
 }
