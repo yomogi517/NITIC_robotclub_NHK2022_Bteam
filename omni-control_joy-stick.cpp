@@ -24,8 +24,8 @@ int Ry;            //ジョイコン　右　y軸
 int Rx;            //ジョイコン　右　x軸
 int Ly;            //ジョイコン　左　y軸
 int Lx;            //ジョイコン　左　x軸
-int L;             //L1
-int R;             //R1
+int L1;             //L1
+int R1;             //R1
 int button_ue;     // ↑
 int button_sita;   // ↓
 int button_migi;   // →
@@ -53,7 +53,7 @@ int main(void){
         }
 
         get_data();
-        printf("m:%d L:%d R:%d Lx%d Ly%d\n",button_maru,L,R,Lx,Ly);
+        printf("m:%d L:%d R:%d Lx%d Ly%d\n",button_maru,L1,R1,Lx,Ly);
         
         //ジョイコン処理
         moved = 0;
@@ -81,14 +81,14 @@ int main(void){
         }
         
         //左に旋回
-        if(L && !moved){
+        if(L1 && !moved){
             data = 0x01;
             send_all(data,data,data,data);
             moved = 1;
         }
 
         //右に旋回
-        if(R && !moved){
+        if(R1 && !moved){
             data = 0xff;
             send_all(data,data,data,data);
             moved = 1;
@@ -114,8 +114,8 @@ void get_data(void){
     button_migi = ps3.getButtonState(PS3::migi);
     button_hidari = ps3.getButtonState(PS3::hidari);
 
-    L = ps3.getButtonState(PS3::L1);
-    R = ps3.getButtonState(PS3::R1);
+    L1 = ps3.getButtonState(PS3::L1);
+    R1 = ps3.getButtonState(PS3::R1);
 
     button_maru = ps3.getButtonState(PS3::maru);
 
