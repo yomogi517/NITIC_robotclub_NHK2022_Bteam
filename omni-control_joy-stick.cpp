@@ -76,7 +76,7 @@ int main(void){
             data_lu = move_value(value_lu);
             data_ls = move_value(value_ls);
             
-            send_all(data_ru, data_rs, data_lu, data_ls);
+            send_all(data_ru, data_rs, data_ls, data_lu);
             moved = 1;
         }
         
